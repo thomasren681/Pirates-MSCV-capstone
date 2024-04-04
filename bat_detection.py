@@ -279,9 +279,12 @@ if __name__ == "__main__":
     vid_result_root = args.vid_result_root
     vid_source_root = args.vid_source_root
 
-    start_idx = get_start_vid(vid_result_root, vid_source_root)
-    vid_list = sorted(os.listdir(vid_source_root))[start_idx:]
-    # vid_list = sorted(os.listdir(vid_source_root))
+    os.makedirs(det_result_root, exist_ok=True)
+    os.makedirs(vid_result_root, exist_ok=True)
+
+    # start_idx = get_start_vid(vid_result_root, vid_source_root)
+    # vid_list = sorted(os.listdir(vid_source_root))[start_idx:]
+    vid_list = sorted(os.listdir(vid_source_root))
     proc_bar = tqdm(range(len(vid_list)))
     for vid_idx in proc_bar:
         vid_name = vid_list[vid_idx].split('.')[0]
