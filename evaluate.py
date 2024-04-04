@@ -3,16 +3,15 @@ import os
 import sys
 from tqdm import tqdm
 import numpy as np
-import cv2
+import pandas as pd
 
 from detectron2.config import get_cfg
-
 sys.path.insert(0, 'third_party/CenterNet2/')
 from centernet.config import add_centernet_config
 from detic.config import add_detic_config
 from detic.predictor import VisualizationDemo
 
-from video_utils import loadVid
+from utils import saveVid, get_prediction, angle_estimation, frame_detection
 
 def setup_cfg(args):
     cfg = get_cfg()
@@ -32,53 +31,25 @@ def setup_cfg(args):
     cfg.freeze()
     return cfg
 
-def process_predictions(predictions):
-    fields = predictions['instances'].get_fields()
-    pred_masks = fields['pred_masks'].to('cpu').numpy()
-    pred_scores = fields['scores'].to('cpu').numpy()
-    pred_boxes = fields['pred_boxes'].tensor.to('cpu').numpy()
-    # pred_classes = fields['pred_classes'].to('cpu').numpy()
+def kf_angle_pred_with_load(det_res_root, vid_file, kf_range, thresh=float('inf')):
+    f_path = os.path.join(det_res_root, vid_file+'.npz')
+    vid_info = np.load(f_path)
+    return kf_angle_pred(vid_info, kf_range, thresh)
 
-    if len(pred_scores) > 1:
-        idx = np.argmax(pred_scores)
-        pred_masks = pred_masks[idx]
-        pred_boxes = pred_boxes[idx]
-        pred_scores = pred_scores[idx]
-    elif len(pred_scores) == 0:
-        pred_scores = np.array([0])
-        pred_boxes = np.zeros((4,))
-        pred_masks = np.zeros((720, 1280))
+def kf_angle_pred(vid_info, kf_range, thresh=float('inf')):
+    boxes = vid_info['boxes']
+    scores = vid_info['scores']
+    masks = vid_info['masks']
+    
+    keyframe, kf_dist = frame_detection(scores, boxes, thresh, kf_range)
+    if keyframe > 0:
+        kf_mask = masks[keyframe-kf_range[0]]
+        est_angle, conf_angle = angle_estimation(kf_mask)
+    else:
+        est_angle, conf_angle = -1, 0
 
-    return pred_scores.squeeze(), pred_boxes.squeeze(), pred_masks.squeeze()
+    return keyframe, kf_dist, est_angle, conf_angle
 
-def saveVid(predictor, vidName, vidSrcRoot, vidResRoot, detResRoot, args, proc_bar = None):
-    vid_masks = []
-    vid_boxes = []
-    vid_scores = []
-    video = loadVid(os.path.join(vidSrcRoot, vidName+'.mp4'))
-    video = video[args.left_win:args.right_win, :, :]
-    if not os.path.exists(os.path.join(detResRoot, vidName)):
-        os.mkdir(os.path.join(detResRoot, vidName))
-
-    for i in range(len(video)):
-        if proc_bar:
-            proc_bar.set_description('[{:03d}/{:03d}] in {}'.format(i+1, len(video), vidName))
-        input_frame = video[i, :, :, :]
-
-        predictions, visualized_output = predictor.run_on_image(input_frame)
-        pred_scores, pred_boxes, pred_masks = process_predictions(predictions)
-
-        vid_scores.append(pred_scores)
-        vid_boxes.append(pred_boxes)
-        vid_masks.append(pred_masks.astype(np.uint8))
-        # print(i, pred_scores, pred_scores.shape)
-
-    vid_scores = np.stack(vid_scores)
-    vid_boxes = np.stack(vid_boxes)
-    vid_masks = np.stack(vid_masks)
-
-    save_path = os.path.join(detResRoot, '{}.npz'.format(vidName))
-    np.savez(save_path, boxes=vid_boxes, scores=vid_scores, masks=vid_masks)
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Detectron2 demo for builtin configs")
@@ -127,20 +98,27 @@ def get_parser():
         type=int
     )
     parser.add_argument(
+        "--dist_thresh",
+        help="threshold for filtering the keyframe candidates",
+        default=float('inf'),
+        type=float
+    )
+    parser.add_argument(
         "--vid_source_root",
         help="The path to the video root",
+        default="./video_data/demo_videos/",
         type=str
     )
     parser.add_argument(
         "--det_result_root",
         help="The path to the video root",
-        default='./detic_results/det_23_result',
+        default= None,
         type=str
     )
     parser.add_argument(
-        "--vid_result_root",
-        help="The path to the video root",
-        default='./detic_results/vid_23_result',
+        "--result_path",
+        help="the path to save the keyframe detection results",
+        default='./result_pred.csv',
         type=str
     )
     return parser
@@ -150,15 +128,36 @@ if __name__ == "__main__":
     cfg = setup_cfg(args)
 
     predictor = VisualizationDemo(cfg, args)
-    det_result_root = args.det_result_root
-    vid_result_root = args.vid_result_root
     vid_source_root = args.vid_source_root
+    det_result_root = args.det_result_root
+    if det_result_root:
+        os.makedirs(det_result_root, exist_ok=True)
 
-    os.makedirs(det_result_root, exist_ok=True)
-    os.makedirs(vid_result_root, exist_ok=True)
-
+    df = pd.DataFrame(columns=['PitchID', 'Keyframe_Pred', 'Keyframe_BBOX_Dist', 'Angle_Est', 'Angle_Conf'])
+    name_list, keyframe_list, kf_dist_list, est_angle_list, conf_angle_list = [], [], [], [], []
     vid_list = sorted(os.listdir(vid_source_root))
     proc_bar = tqdm(range(len(vid_list)))
     for vid_idx in proc_bar:
         vid_name = vid_list[vid_idx].split('.')[0]
-        saveVid(predictor, vid_name, vid_source_root, vid_result_root, det_result_root, args, proc_bar=proc_bar)
+        if det_result_root:
+            saveVid(predictor, vid_name, vid_source_root, det_result_root, args, proc_bar=proc_bar)
+            kf_idx, kf_dist, est_angle, conf_angle = kf_angle_pred_with_load(det_result_root, vid_name,
+                                                    kf_range = (args.left_win, args.right_win))
+        else:
+            pred_info = get_prediction(predictor, vid_name, vid_source_root, args, proc_bar=proc_bar)
+            kf_idx, kf_dist, est_angle, conf_angle = kf_angle_pred(pred_info,
+                                                    kf_range = (args.left_win, args.right_win), thresh=args.dist_thresh)        
+        
+        name_list.append(vid_name)
+        keyframe_list.append(kf_idx)
+        kf_dist_list.append(kf_dist)
+        est_angle_list.append(est_angle)
+        conf_angle_list.append(conf_angle)
+        proc_bar.set_description('vid [{}]'.format(vid_name))
+
+    df['PitchID'] = name_list
+    df['Keyframe_Pred'] = keyframe_list
+    df['Keyframe_BBOX_Dist'] = kf_dist_list
+    df['Angle_Est'] = est_angle_list
+    df['Angle_Conf'] = conf_angle_list
+    df.to_csv(args.result_path, index=False)
