@@ -1,4 +1,4 @@
-# How to use Detic model to run object orientation
+# Automatically bat angle detection in broadcast videos
 
 Our code is built on the [Detic model](https://github.com/facebookresearch/Detic?tab=readme-ov-file). The implementation of bat orientation estimation can be divided into three steps:
 
