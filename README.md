@@ -6,6 +6,9 @@ Our code is built on the [Detic model](https://github.com/facebookresearch/Detic
 2. Locate the keyframe using the detection results on the baseball bat
 3. Estimate the angle from the located segmentation mask
 
+## Installation
+See [installation instructions](INSTALL.md).
+
 ## Video dataset set up
 
 An example video dataset would looks like this:
@@ -22,6 +25,6 @@ Detic/
 
 ## Evaluation
 
-Then, we can run our code by typing `python evaluate.py --vid_source_root ./videos-pirates/vid_09-23 --dist_thresh 120`. By default, the prediction results will be saved to `result_pred.csv`.
+Then, we can run our code with the command `python evaluate.py --vid_source_root ./videos-pirates/vid_09-23 --dist_thresh 120`. By default, the prediction results will be saved to `result_pred.csv`.
 
 You can also save intermediate detection results for multiple runs by adding the `--det_result_root` argument.
