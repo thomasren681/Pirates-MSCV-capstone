@@ -49,7 +49,7 @@ detic_results/
 
 ## Keyframe detection
 
-The keyframe detection part needs to choose a threshold (only hyperparameter) to perform, and returns a `.csv` file to record the prediction and ground truth label for each video. Our example would be run `python kf_detection.py --det_result_root ./detic_results/det_23_result --kf_result_path ./kf_23_pred.csv --kf_label_path ./vid_23_label.csv --cen_dist_thresh 120`.
+The keyframe detection part needs to choose a threshold (only hyperparameter) to perform, and returns a `.csv` file to record the prediction and ground truth label for each video. Our example would be run `python kf_angle_prediction.py --det_result_root ./detic_results/det_23_result --kf_result_path ./kf_23_pred.csv --kf_label_path ./vid_23_label.csv --cen_dist_thresh 120`.
 
 If there is no ground truth label for this dataset, just skip that argument, and the ground truth will be set to `-100` in the output csv file.
 
