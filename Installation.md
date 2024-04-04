@@ -11,8 +11,8 @@
 ```bash
 conda create --name detic python=3.8 -y
 conda activate detic
-conda install pytorch torchvision torchaudio cudatoolkit=11.1 -c pytorch-lts -c nvidia
+conda install pytorch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 pytorch-cuda=11.8 -c pytorch -c nvidia
 
-git clone https://github.com/facebookresearch/Detic.git --recurse-submodules
-cd Detic
+git clone https://github.com/calzhao/Pirates-MSCV-capstone.git --recurse-submodules
+cd Pirates-MSCV-capstone
 pip install -r requirements.txt
