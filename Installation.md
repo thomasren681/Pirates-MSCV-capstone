@@ -15,4 +15,4 @@ conda install pytorch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 pytorch-cuda=
 
 git clone https://github.com/calzhao/Pirates-MSCV-capstone.git --recurse-submodules
 cd Pirates-MSCV-capstone
-pip install -r requirements.txt
+bash setup.sh
