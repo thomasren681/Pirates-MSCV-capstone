@@ -37,11 +37,11 @@ def angle_estimation(mask):
 
     return est_angle, r_squared
 
-def frame_detection(scores, bboxes, thresh, kf_range=(190, 220)):
+def frame_detection(scores, bboxes, vid_shape, thresh, kf_range=(190, 220)):
     lb, ub = kf_range
     peaks = find_peaks(scores, l_bound=lb, r_bound=ub - 1)
     candidates = context_proposal(scores, peaks, l_bound=lb, r_bound=ub - 1)
-    cen_dist, hor_len, ver_len = get_bbox_info(bboxes)
+    cen_dist, hor_len, ver_len = get_bbox_info(bboxes, vid_shape)
     selected_indices = np.asarray([idx for idx in candidates if cen_dist[idx - lb] < thresh])
 
     if len(selected_indices) == 0:
@@ -128,10 +128,10 @@ def get_prediction(predictor, vidName, vidSrcRoot, args, proc_bar = None):
 def center_dist(xc, yc, C_X=640, C_Y=360):
     return np.sqrt((xc - C_X) ** 2 + (yc - C_Y) ** 2)
 
-def get_bbox_info(bboxes):
+def get_bbox_info(bboxes, vid_shape):
     x_c = (bboxes[:, 0] + bboxes[:, 2]) / 2
     y_c = (bboxes[:, 1] + bboxes[:, 3]) / 2
-    euc_dist = center_dist(x_c, y_c)
+    euc_dist = center_dist(x_c, y_c, C_X=vid_shape[1]/2, C_Y=vid_shape[0]/2)
     
     x_length = bboxes[:, 2] - bboxes[:, 0]
     y_length = bboxes[:, 3] - bboxes[:, 1]
