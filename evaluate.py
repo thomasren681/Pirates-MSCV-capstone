@@ -40,8 +40,9 @@ def kf_angle_pred(vid_info, kf_range, thresh=float('inf')):
     boxes = vid_info['boxes']
     scores = vid_info['scores']
     masks = vid_info['masks']
-    
-    keyframe, kf_dist = frame_detection(scores, boxes, thresh, kf_range)
+
+    _, H, W = masks.shape
+    keyframe, kf_dist = frame_detection(scores, boxes, (H, W), thresh, kf_range)
     if keyframe > 0:
         kf_mask = masks[keyframe-kf_range[0]]
         est_angle, conf_angle = angle_estimation(kf_mask)
