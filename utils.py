@@ -73,7 +73,7 @@ def loadVid(path):
     frames = np.stack(frames)
     return frames
 
-def process_predictions(predictions):
+def process_predictions(predictions, vid_shape):
     fields = predictions['instances'].get_fields()
     pred_masks = fields['pred_masks'].to('cpu').numpy()
     pred_scores = fields['scores'].to('cpu').numpy()
@@ -88,7 +88,8 @@ def process_predictions(predictions):
     elif len(pred_scores) == 0:
         pred_scores = np.array([0])
         pred_boxes = np.zeros((4,))
-        pred_masks = np.zeros((720, 1280))
+        # pred_masks = np.zeros((720, 1280))
+        # pred_masks = np.zeros(vid_shape)
 
     return pred_scores.squeeze(), pred_boxes.squeeze(), pred_masks.squeeze()
 
@@ -110,7 +111,8 @@ def get_prediction(predictor, vidName, vidSrcRoot, args, proc_bar = None):
         input_frame = video[i, :, :, :]
 
         predictions, visualized_output = predictor.run_on_image(input_frame)
-        pred_scores, pred_boxes, pred_masks = process_predictions(predictions)
+        H, W, _ = input_frame.shape
+        pred_scores, pred_boxes, pred_masks = process_predictions(predictions, (H, W))
 
         vid_scores.append(pred_scores)
         vid_boxes.append(pred_boxes)
