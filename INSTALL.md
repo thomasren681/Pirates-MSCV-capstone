@@ -13,6 +13,6 @@ conda create --name detic python=3.8 -y
 conda activate detic
 conda install pytorch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 pytorch-cuda=11.8 -c pytorch -c nvidia
 
-git clone https://github.com/calzhao/bat_test.git --recurse-submodules
-cd bat_test
+git clone https://github.com/calzhao/Pirates-MSCV-capstone.git --recurse-submodules
+cd Pirates-MSCV-capstone
 bash setup.sh

@@ -94,16 +94,16 @@ def process_predictions(predictions, vid_shape):
     return pred_scores.squeeze(), pred_boxes.squeeze(), pred_masks.squeeze()
 
 def saveVid(predictor, vidName, vidSrcRoot, detResRoot, args, proc_bar = None):
-    vid_scores, vid_boxes, vid_masks = get_prediction(predictor, vidName, vidSrcRoot, args, proc_bar=proc_bar)
+    vid_scores, vid_boxes, vid_masks = get_prediction(predictor, vidName, vidSrcRoot, (args.left_win,args.right_win), proc_bar=proc_bar)
     save_path = os.path.join(detResRoot, '{}.npz'.format(vidName))
     np.savez(save_path, boxes=vid_boxes, scores=vid_scores, masks=vid_masks)
     
-def get_prediction(predictor, vidName, vidSrcRoot, args, proc_bar = None):
+def get_prediction(predictor, vidName, vidSrcRoot, window, proc_bar = None):
     vid_masks = []
     vid_boxes = []
     vid_scores = []
     video = loadVid(os.path.join(vidSrcRoot, vidName+'.mp4'))
-    video = video[args.left_win:args.right_win, :, :]
+    video = video[window[0]:window[1], :, :]
 
     for i in range(len(video)):
         if proc_bar:

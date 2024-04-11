@@ -1,4 +1,7 @@
-# Automatically bat angle detection in broadcast videos
+# Automatic baseball bat angle detection in broadcast videos
+>  Developed by Lingran Zhao and Ziyou Ren
+
+<p align="center"> <img src='docs/detic.gif' align="center" height="300px"> </p>
 
 Our code is built on the [Detic model](https://github.com/facebookresearch/Detic?tab=readme-ov-file). The implementation of bat orientation estimation can be divided into three steps:
 
@@ -28,3 +31,10 @@ Detic/
 Then, we can run our code with the command `python evaluate.py --vid_source_root ./videos-pirates/vid_09-23 --dist_thresh 120`. By default, the prediction results will be saved to `result_pred.csv`.
 
 You can also save intermediate detection results for multiple runs by adding the `--det_result_root` argument.
+
+## Demo
+Run our demo using Colab (no GPU needed): [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/183n8QE4UQEuu4MqqN7WYVU_Y22M4YEjL?usp=sharing)
+
+The visualization of estimated bat angle :
+
+<p align="center"> <img src='docs/perfect_bat.png' align="center" height="450px"> </p>

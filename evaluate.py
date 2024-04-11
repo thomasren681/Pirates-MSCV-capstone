@@ -145,7 +145,7 @@ if __name__ == "__main__":
             kf_idx, kf_dist, est_angle, conf_angle = kf_angle_pred_with_load(det_result_root, vid_name,
                                                     kf_range = (args.left_win, args.right_win))
         else:
-            pred_info = get_prediction(predictor, vid_name, vid_source_root, args, proc_bar=proc_bar)
+            pred_info = get_prediction(predictor, vid_name, vid_source_root, window=(args.left_win,args.right_win), proc_bar=proc_bar)
             kf_idx, kf_dist, est_angle, conf_angle = kf_angle_pred(pred_info,
                                                     kf_range = (args.left_win, args.right_win), thresh=args.dist_thresh)        
         
